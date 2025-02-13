@@ -1,5 +1,6 @@
 annotated-types==0.7.0
 blinker==1.9.0
+serverless-wsgi==3.0.1
 CacheControl==0.14.2
 cachetools==5.5.1
 certifi==2025.1.31

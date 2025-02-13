@@ -19,7 +19,9 @@ config = {
     "measurementId": "G-EZ3SMDH9XJ"
 }
 app = Flask(__name__)
+from flask_cors import CORS
 
+CORS(app)
 # Configuration
 app.config['JWT_SECRET_KEY'] = 'super-secret-key'  # Change in production
 app.config['SECRET_KEY'] = 'your-secret-key-here'  # Required for CSRF
@@ -533,5 +535,7 @@ def extract_and_format_medicine_data(image_path):
     return json.dumps(medicine_data, indent=4)
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
+from serverless_wsgi import handle_request
+
+def vercel_handler(request, context):
+    return handle_request(app, request, context)
