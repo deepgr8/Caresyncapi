@@ -534,8 +534,5 @@ def extract_and_format_medicine_data(image_path):
     print(json.dumps(medicine_data, indent=4))
     return json.dumps(medicine_data, indent=4)
 
-
-from serverless_wsgi import handle_request
-
-def vercel_handler(request, context):
-    return handle_request(app, request, context)
+if __name__ == '__main__':
+    app.run(debug=True)
