@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
-{% block page_title %}Good morning, <span>{{ current_user_name }}</span> 👋{% endblock %}
+{% block page_title %}<span id="dynamic-greeting" style="color: var(--text);">Good morning</span>, <span>{{
+    current_user_name }}</span> 👋{% endblock %}
 {% block page_subtitle %}{{ today_date }}{% endblock %}
 
 {% block header_actions %}
@@ -192,6 +193,29 @@
                     alarmedTimes.delete(time);
                 }
             });
+        }
+    });
+</script>
+
+<script>
+    // Update greeting immediately based on local client timezone
+    document.addEventListener("DOMContentLoaded", function () {
+        const hour = new Date().getHours();
+        let clientGreeting;
+
+        if (hour >= 5 && hour < 12) {
+            clientGreeting = "Good morning";
+        } else if (hour >= 12 && hour < 17) {
+            clientGreeting = "Good afternoon";
+        } else if (hour >= 17 && hour < 21) {
+            clientGreeting = "Good evening";
+        } else {
+            clientGreeting = "Good night";
+        }
+
+        const greetingSpan = document.getElementById("dynamic-greeting");
+        if (greetingSpan) {
+            greetingSpan.textContent = clientGreeting;
         }
     });
 </script>

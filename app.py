@@ -192,8 +192,18 @@ def inject_user():
     except:
         pass
     
+    # Calculate Dynamic Greeting
+    current_hour = datetime.now().hour
+    if current_hour < 12:
+        greeting = "Good morning"
+    elif 12 <= current_hour < 17:
+        greeting = "Good afternoon"
+    else:
+        greeting = "Good evening"
+    
     return dict(
         current_user_name=user_name,
+        current_greeting=greeting,
         today_date=datetime.now().strftime("%A, %B %d, %Y"),
         today_date_iso=datetime.now().strftime("%Y-%m-%d")
     )
@@ -738,4 +748,5 @@ def ai_upload():
     return render_template('ai_upload.html', active_page='ai')
     
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False,port=3000)
+    
