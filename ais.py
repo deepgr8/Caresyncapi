@@ -3,25 +3,22 @@ from datetime import datetime, timedelta
 import json
 import re
 
-import datetime
-
 
 
 def extract_and_format_medicine_data(image_path):
-    genai.configure(api_key="AIzaSyATW9PLC3Ozk5oqcZh4o51oIvvbPlTWrWI")
+    genai.configure(api_key="AIzaSyAnH0L0wjUMOfzTovn7aS5xvxxezVTDj3U")
     
     myfile = genai.upload_file(image_path)
 
-    start_date =datetime.date.today()
+    start_date = datetime.today().strftime("%Y-%m-%d")
 
     # Step 1: Extract Medicine Details from Image
-    model = genai.GenerativeModel("gemini-2.0-flash-exp")
+    model = genai.GenerativeModel("gemini-3-flash-preview")
     result = model.generate_content(
         [myfile, "\n\n", "Extract the medicine name and thier dosage mention in the picture as a list and do this correct because it part of healthcare so no mistaken should be considered"]
     )
 
     # Step 2: Format Extracted Data into JSON
-    model = genai.GenerativeModel("gemini-1.5-flash")
     response = model.generate_content(
     result.text + " " + 
     "Provide the response strictly in valid JSON format only. The JSON array should contain objects with fields: "

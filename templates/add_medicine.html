@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block page_title %}Add New Medicine{% endblock %}
+{% block page_subtitle %}Enter your prescription details below to track automatically{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 680px; margin: 0 auto; padding: 40px;">
+    <div class="card-header" style="margin-bottom: 32px;">
+        <div class="card-title-wrap">
+            <span class="material-icons-round card-icon teal">prescriptions</span>
+            <h2 class="card-title" style="font-size: 22px;">Medicine Details</h2>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('add_manual_medication') }}">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0 24px;">
+            <div class="field-group" style="grid-column: 1 / -1;">
+                <label class="field-label">Medicine Name <span style="color:var(--red)">*</span></label>
+                <div class="input-wrap">
+                    <span class="material-icons-round input-icon">medication</span>
+                    <input type="text" name="name" class="field-input" placeholder="e.g. Metformin" required />
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label class="field-label">Dosage <span style="color:var(--red)">*</span></label>
+                <div class="input-wrap">
+                    <span class="material-icons-round input-icon">science</span>
+                    <input type="text" name="dosage" class="field-input" placeholder="e.g. 500mg" required />
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label class="field-label">Frequency <span style="color:var(--red)">*</span></label>
+                <div class="input-wrap">
+                    <span class="material-icons-round input-icon">repeat</span>
+                    <input type="text" name="frequency" class="field-input" placeholder="e.g. Twice daily" required />
+                </div>
+            </div>
+
+            <div class="field-group" style="grid-column: 1 / -1;">
+                <label class="field-label">General Instructions</label>
+                <div class="input-wrap">
+                    <span class="material-icons-round input-icon">info</span>
+                    <input type="text" name="instructions" class="field-input"
+                        placeholder="e.g. Take after meals (Optional)" />
+                </div>
+            </div>
+
+            <div class="field-group" style="grid-column: 1 / -1;">
+                <label class="field-label">Scheduled Times <span style="color:var(--red)">*</span></label>
+                <div style="display:flex; gap:12px;">
+                    <div class="input-wrap" style="flex:1;">
+                        <span class="material-icons-round input-icon">alarm</span>
+                        <input type="time" name="time_1" class="field-input" required />
+                    </div>
+                    <div class="input-wrap" style="flex:1;">
+                        <span class="material-icons-round input-icon">alarm</span>
+                        <input type="time" name="time_2" class="field-input" />
+                    </div>
+                    <div class="input-wrap" style="flex:1;">
+                        <span class="material-icons-round input-icon">alarm</span>
+                        <input type="time" name="time_3" class="field-input" />
+                    </div>
+                </div>
+                <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">Reminders will be automatically
+                    created based on these times.</p>
+            </div>
+
+            <div class="field-group">
+                <label class="field-label">Start Date <span style="color:var(--red)">*</span></label>
+                <div class="input-wrap">
+                    <span class="material-icons-round input-icon">event_available</span>
+                    <input type="date" name="start_date" class="field-input" required value="{{ today_date_iso }}" />
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label class="field-label">End Date (Optional)</label>
+                <div class="input-wrap">
+                    <span class="material-icons-round input-icon">event_busy</span>
+                    <input type="date" name="end_date" class="field-input" />
+                </div>
+            </div>
+        </div>
+
+        <div
+            style="margin-top: 40px; display: flex; justify-content: flex-end; gap: 16px; padding-top: 24px; border-top: 1px solid var(--surface-border);">
+            <a href="{{ url_for('dashboard') }}" class="btn-ghost" style="text-decoration:none">Cancel</a>
+            <button type="submit" class="btn-primary">
+                <span class="material-icons-round" style="font-size:20px">save</span>
+                <span class="btn-text">Save Medicine</span>
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

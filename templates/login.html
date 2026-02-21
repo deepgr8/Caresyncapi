@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareSync – Sign In</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+
+    <div class="auth-screen">
+        <div class="auth-glow-bg"></div>
+        <div class="auth-card">
+            <div class="auth-logo">
+                <span class="material-icons-round logo-icon">medication</span>
+                <span class="logo-text">CareSync</span>
+            </div>
+
+            <h2 class="auth-title">Welcome back</h2>
+            <p class="auth-subtitle">Sign in to securely manage your health</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="auth-error"
+                style="display:block; text-align:center; {% if category == 'success' %}background:var(--primary-light); color:var(--primary); border-color:var(--primary-light);{% endif %}">
+                {{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('login') }}" class="auth-form">
+                <div class="field-group">
+                    <label class="field-label">Email Address</label>
+                    <div class="input-wrap">
+                        <span class="material-icons-round input-icon">mail</span>
+                        <input type="email" name="email" class="field-input" placeholder="you@example.com" required />
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">Password</label>
+                    <div class="input-wrap">
+                        <span class="material-icons-round input-icon">lock</span>
+                        <input type="password" name="password" class="field-input" placeholder="••••••••" required />
+                    </div>
+                </div>
+
+                <div style="margin-top: 12px; margin-bottom: 32px; display: flex; justify-content: flex-end;">
+                    <a href="#"
+                        style="color:var(--primary); font-size:13px; font-weight:500; text-decoration:none;">Forgot
+                        password?</a>
+                </div>
+
+                <button type="submit" class="btn-primary w-full" style="padding: 16px; font-size: 16px;">
+                    <span class="btn-text">Sign In</span>
+                </button>
+            </form>
+
+            <div style="text-align:center; margin-top:32px; font-size:15px; color:var(--text-muted)">
+                <span>Don't have an account?</span>
+                <a href="{{ url_for('register_page') }}"
+                    style="color:var(--primary); font-weight:600; text-decoration:none; margin-left:6px">Sign Up</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

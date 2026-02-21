@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareSync – Create Account</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+
+    <div class="auth-screen">
+        <div class="auth-glow-bg"></div>
+        <div class="auth-card" style="max-width: 540px;">
+            <div class="auth-logo">
+                <span class="material-icons-round logo-icon">medication</span>
+                <span class="logo-text">CareSync</span>
+            </div>
+
+            <h2 class="auth-title">Create your Account</h2>
+            <p class="auth-subtitle">Join CareSync today and elevate your health journey</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="auth-error"
+                style="display:block; text-align:center; {% if category == 'success' %}background:var(--primary-light); color:var(--primary); border-color:var(--primary-light);{% endif %}">
+                {{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('register') }}" class="auth-form">
+                <div class="field-group">
+                    <label class="field-label">Full Name</label>
+                    <div class="input-wrap">
+                        <span class="material-icons-round input-icon">person</span>
+                        <input type="text" name="name" class="field-input" placeholder="John Doe" required />
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">Email Address</label>
+                    <div class="input-wrap">
+                        <span class="material-icons-round input-icon">mail</span>
+                        <input type="email" name="email" class="field-input" placeholder="you@example.com" required />
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="field-group">
+                        <label class="field-label">Password</label>
+                        <div class="input-wrap">
+                            <span class="material-icons-round input-icon">lock</span>
+                            <input type="password" name="password" class="field-input" placeholder="••••••••"
+                                required />
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label class="field-label">Confirm</label>
+                        <div class="input-wrap">
+                            <span class="material-icons-round input-icon">lock_clock</span>
+                            <input type="password" name="confirm_password" class="field-input" placeholder="••••••••"
+                                required />
+                        </div>
+                    </div>
+                </div>
+
+                <label for="regIsGuardian" class="field-group"
+                    style="display:flex; flex-direction:row; align-items:center; gap:12px; margin-top:8px; margin-bottom:32px; cursor:pointer; padding: 16px; border: 1px solid var(--surface-border); border-radius: var(--radius-sm); background: var(--bg); transition: var(--transition);">
+                    <input type="checkbox" name="is_guardian" id="regIsGuardian" value="true"
+                        style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;" />
+                    <div>
+                        <div style="font-weight:600; color:var(--text); font-size:14px;">I am registering as a Guardian
+                        </div>
+                        <div style="font-size:13px; color:var(--text-muted); margin-top:2px;">You'll be able to monitor
+                            someone else's adherence.</div>
+                    </div>
+                </label>
+
+                <button type="submit" class="btn-primary w-full" style="padding: 16px; font-size: 16px;">
+                    <span class="btn-text">Create Account</span>
+                </button>
+            </form>
+
+            <div style="text-align:center; margin-top:32px; font-size:15px; color:var(--text-muted)">
+                <span>Already have an account?</span>
+                <a href="{{ url_for('index') }}"
+                    style="color:var(--primary); font-weight:600; text-decoration:none; margin-left:6px">Sign In</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

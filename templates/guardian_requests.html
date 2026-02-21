@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block page_title %}Guardian Monitoring{% endblock %}
+{% block page_subtitle %}Manage your care network and family access.{% endblock %}
+
+{% block content %}
+<div class="guardian-grid">
+    <!-- Main Content Area -->
+    <div class="card" style="padding: 32px;">
+        {% if is_guardian %}
+        <div class="card-header" style="margin-bottom: 24px;">
+            <div class="card-title-wrap">
+                <span class="material-icons-round card-icon blue">person_add</span>
+                <h2 class="card-title">Add Patient</h2>
+            </div>
+        </div>
+        <p style="color:var(--text-muted); font-size:15px; margin-bottom: 24px;">
+            Enter the email address of the patient you wish to monitor. They will need to accept your request in their
+            own tracking portal before you gain access.
+        </p>
+
+        <form method="POST" action="{{ url_for('send_guardian_request') }}" class="add-patient-form"
+            style="display:flex; flex-direction:column; gap:16px;">
+            <div class="form-group">
+                <label>Patient Email</label>
+                <div style="position:relative;">
+                    <span class="material-icons-round"
+                        style="position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--text-subtle);">mail</span>
+                    <input type="email" name="patient_email" class="form-input" style="padding-left:48px;"
+                        placeholder="patient@example.com" required>
+                </div>
+            </div>
+            <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">
+                <span class="material-icons-round" style="font-size:20px;">send</span>
+                Send Tracking Request
+            </button>
+        </form>
+
+        {% if requests %}
+        <div style="margin-top: 40px;">
+            <h3 style="font-size: 16px; font-weight: 600; color:var(--text); margin-bottom: 16px;">Sent Requests
+                (Pending)</h3>
+            <div class="guardian-list">
+                {% for r in requests %}
+                <div class="guardian-request-item" style="opacity: 0.7;">
+                    <div class="guardian-info">
+                        <div class="guardian-avatar"
+                            style="background:var(--surface); border:1px solid var(--surface-border); color:var(--text-muted);">
+                            <span class="material-icons-round" style="font-size:20px;">hourglass_empty</span>
+                        </div>
+                        <div>
+                            <div class="guardian-name">Request Pending</div>
+                            <div class="guardian-msg" style="margin-top:2px;">Waiting for patient approval</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- Patient View: Pending Requests -->
+        <div class="card-header" style="margin-bottom: 24px;">
+            <div class="card-title-wrap">
+                <span class="material-icons-round card-icon teal">person_add</span>
+                <h2 class="card-title">Pending Requests</h2>
+            </div>
+            {% if requests %}
+            <span class="badge-chip amber">{{ requests|length }} Pending</span>
+            {% endif %}
+        </div>
+
+        <div class="guardian-list">
+            {% if not requests %}
+            <div class="empty-state" style="padding: 40px 20px;">
+                <span class="material-icons-round empty-icon"
+                    style="font-size: 48px !important; color:var(--text-subtle)">check_circle</span>
+                <p class="empty-title" style="font-size:18px;">All sorted!</p>
+                <p class="empty-sub">You have no pending guardian requests.</p>
+            </div>
+            {% else %}
+            {% for r in requests %}
+            <div class="guardian-request-item">
+                <div class="guardian-info">
+                    <div class="guardian-avatar">{{ r.guardian_name[0]|upper }}</div>
+                    <div>
+                        <div class="guardian-name">{{ r.guardian_name }}</div>
+                        <div class="guardian-msg" style="margin-top:2px;">{{ r.message }}</div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:12px;">
+                    <!-- Decline Form -->
+                    <form method="POST" action="{{ url_for('handle_request', request_id=r.id) }}" style="margin:0;">
+                        <input type="hidden" name="action" value="reject">
+                        <button class="btn-ghost" style="padding: 8px 16px; color:var(--red);">Decline</button>
+                    </form>
+                    <!-- Accept Form -->
+                    <form method="POST" action="{{ url_for('handle_request', request_id=r.id) }}" style="margin:0;">
+                        <input type="hidden" name="action" value="accept">
+                        <button class="btn-primary" style="padding: 8px 16px;">Accept</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Info Card -->
+    <div class="card" style="background: linear-gradient(135deg, var(--bg) 0%, #E0F2FE 100%); border: none;">
+        <div class="card-header">
+            <div class="card-title-wrap">
+                <span class="material-icons-round card-icon blue" style="background:var(--surface);">security</span>
+                <h2 class="card-title">About Guardian Mode</h2>
+            </div>
+        </div>
+        <p style="color:var(--text-muted); line-height:1.7; font-size:15px; margin-bottom:24px;">
+            Guardian mode lets a trusted person (family member, caregiver) monitor your medication
+            adherence. They can see your scheduled doses and receive alerts when a dose is missed.
+        </p>
+
+        <div style="display:flex; flex-direction:column; gap:16px;">
+            <div style="display:flex; gap:12px; align-items:flex-start;">
+                <span class="material-icons-round" style="color:var(--accent); font-size:24px;">monitor_heart</span>
+                <div>
+                    <strong style="color:var(--text); font-size:15px; display:block; margin-bottom:4px;">Real-time
+                        Monitoring</strong>
+                    <span style="color:var(--text-muted); font-size:14px;">Your guardian can see your adherence score
+                        updated live.</span>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:12px; align-items:flex-start;">
+                <span class="material-icons-round"
+                    style="color:var(--amber); font-size:24px;">notifications_active</span>
+                <div>
+                    <strong style="color:var(--text); font-size:15px; display:block; margin-bottom:4px;">Missed-dose
+                        Alerts</strong>
+                    <span style="color:var(--text-muted); font-size:14px;">If you miss a dose, an alert ensures someone
+                        checks on you.</span>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:12px; align-items:flex-start;">
+                <span class="material-icons-round" style="color:var(--primary); font-size:24px;">lock_person</span>
+                <div>
+                    <strong style="color:var(--text); font-size:15px; display:block; margin-bottom:4px;">Secure &
+                        Private</strong>
+                    <span style="color:var(--text-muted); font-size:14px;">Access is consent-based. You can revoke
+                        guardian access anytime.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

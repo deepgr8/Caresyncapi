@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareSync – Smart Medication Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/material_blue.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+</head>
+
+<body>
+    <!-- ─── APP SHELL ──────────────────────────────────────────────── -->
+    <div class="app-shell">
+        <!-- ─── SIDEBAR ────────────────────────────────────────────────── -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="{{ url_for('dashboard') }}" class="sidebar-brand">
+                    <span class="material-icons-round brand-icon">medication</span>
+                    <span class="brand-text">CareSync</span>
+                </a>
+                <button class="sidebar-toggle hidden-mobile" id="sidebarToggle"
+                    onclick="document.getElementById('sidebar').classList.toggle('collapsed')">
+                    <span class="material-icons-round">menu_open</span>
+                </button>
+            </div>
+
+            <div class="sidebar-nav">
+                <a href="{{ url_for('dashboard') }}"
+                    class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+                    <span class="material-icons-round nav-icon">dashboard</span>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+                <a href="{{ url_for('medications') }}"
+                    class="nav-item {% if active_page == 'medications' %}active{% endif %}">
+                    <span class="material-icons-round nav-icon">vaccines</span>
+                    <span class="nav-text">Medicines</span>
+                </a>
+                <a href="{{ url_for('ai_upload') }}" class="nav-item {% if active_page == 'ai' %}active{% endif %}">
+                    <span class="material-icons-round nav-icon">document_scanner</span>
+                    <span class="nav-text">AI Scanner</span>
+                </a>
+                <a href="{{ url_for('guardian_requests') }}"
+                    class="nav-item {% if active_page == 'guardian' %}active{% endif %}">
+                    <span class="material-icons-round nav-icon">shield</span>
+                    <span class="nav-text">Guardian</span>
+                </a>
+            </div>
+
+            <div class="sidebar-footer">
+                <a href="{{ url_for('logout') }}" class="nav-item logout-btn">
+                    <span class="material-icons-round nav-icon">logout</span>
+                    <span class="nav-text">Sign Out</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- ─── MAIN CONTENT ───────────────────────────────────────────── -->
+        <main class="main-wrapper">
+            <!-- ─── TOP NAV ────────────────────────────────────────────────── -->
+            <nav class="top-nav">
+                <button class="nav-toggle action-icon-btn" id="mobileSidebarToggle">
+                    <span class="material-icons-round">menu</span>
+                </button>
+                <div class="nav-brand-mobile">CareSync</div>
+
+                <div class="nav-search" style="visibility: hidden;">
+                    <!-- Search removed per request -->
+                </div>
+
+                <div class="nav-actions">
+                    <a href="{{ url_for('dashboard') }}" class="icon-btn hidden-mobile" title="Refresh">
+                        <span class="material-icons-round">refresh</span>
+                    </a>
+                    <div class="user-profile" id="userAvatarBtn">
+                        <div class="user-avatar" style="text-transform: uppercase;">{{ current_user_name[0] if
+                            current_user_name else 'U' }}</div>
+                        <span class="hidden-mobile nav-text" style="font-weight: 500;">{{ current_user_name or 'User'
+                            }}</span>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="content-container">
+                <header class="page-header">
+                    <div>
+                        <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+                        <p class="page-subtitle">{% block page_subtitle %}{% endblock %}</p>
+                    </div>
+                    <div class="header-actions">
+                        {% block header_actions %}{% endblock %}
+                    </div>
+                </header>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="toast {% if category == 'error' %}error{% endif %}" id="flash-toast">
+                    <span class="material-icons-round toast-icon">{% if category == 'error' %}error{% else
+                        %}check_circle{%
+                        endif %}</span>
+                    <span>{{ message }}</span>
+                </div>
+                {% endfor %}
+                <script>
+                    setTimeout(() => {
+                        const toast = document.getElementById('flash-toast');
+                        if (toast) toast.classList.add('hidden');
+                    }, 4000);
+                </script>
+                {% endif %}
+                {% endwith %}
+
+                <!-- ─── INJECTED PAGE CONTENT ──────────────────────────────── -->
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- ─── MOBILE SIDEBAR OVERLAY ─────────────────────────────────── -->
+    <div id="sidebarOverlay"
+        style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.4);z-index:90;display:none;"
+        onclick="document.getElementById('sidebar').classList.remove('mobile-open'); this.style.display='none';">
+    </div>
+
+    <script>
+        document.getElementById('mobileSidebarToggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.add('mobile-open');
+            document.getElementById('sidebarOverlay').style.display = 'block';
+        });
+
+        // Initialize flatpickr on all time inputs
+        flatpickr("input[type=time]", {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "H:i",
+            time_24hr: false
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block page_title %}Good morning, <span>{{ current_user_name }}</span> 👋{% endblock %}
+{% block page_subtitle %}{{ today_date }}{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('add_medicine') }}" class="btn-primary" style="text-decoration:none">
+    <span class="material-icons-round" style="font-size:20px">add</span>
+    Add Medicine
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- ─── STATS ROW ────────────────────────────────────────────────── -->
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-icon-wrap" style="background:var(--primary-light); color:var(--primary)">
+            <span class="material-icons-round" style="font-size:28px">medication</span>
+        </div>
+        <div>
+            <div class="stat-value">{{ stats.total }}</div>
+            <div class="stat-label">Active Medicines</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon-wrap" style="background:var(--accent-light); color:var(--accent)">
+            <span class="material-icons-round" style="font-size:28px">check_circle</span>
+        </div>
+        <div>
+            <div class="stat-value">{{ stats.taken }}</div>
+            <div class="stat-label">Doses Taken</div>
+            <div class="stat-delta up">Today</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon-wrap" style="background:var(--red-light); color:var(--red)">
+            <span class="material-icons-round" style="font-size:28px">cancel</span>
+        </div>
+        <div>
+            <div class="stat-value">{{ stats.missed }}</div>
+            <div class="stat-label">Doses Missed</div>
+            <div class="stat-delta down">Today</div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── ADHERENCE & REMINDERS GRID ───────────────────────────────── -->
+<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap:24px;">
+
+    <!-- ADHERENCE CARD -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title-wrap">
+                <span class="material-icons-round card-icon teal">show_chart</span>
+                <h2 class="card-title">Today's Adherence</h2>
+            </div>
+            <span
+                class="badge-chip {% if stats.pct >= 80 %}green{% elif stats.pct >= 50 %}amber{% else %}red{% endif %}">
+                {% if stats.pct >= 80 %}Great 🎉{% elif stats.pct >= 50 %}Moderate{% else %}Needs Attention{% endif %}
+            </span>
+        </div>
+        <div class="adherence-info">
+            <p class="adherence-doses">{{ stats.taken }} <span
+                    style="font-weight:400; color:var(--text-muted); font-size:18px">of {{ stats.total_today }} doses
+                    taken</span></p>
+            <p class="adherence-sub">Keep it up! Consistency is key to your health.</p>
+        </div>
+        <div class="progress-track">
+            <div class="progress-bar" style="width:{{ stats.pct }}%"></div>
+        </div>
+        <div class="progress-labels">
+            <span>0%</span>
+            <span>{{ stats.pct }}%</span>
+        </div>
+    </div>
+
+    <!-- REMINDERS CARD -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title-wrap">
+                <span class="material-icons-round card-icon blue">alarm_on</span>
+                <h2 class="card-title">Reminders</h2>
+            </div>
+        </div>
+        <div class="reminder-list">
+            {% if not reminders %}
+            <div class="empty-state" style="padding:40px 20px;">
+                <span class="material-icons-round empty-icon"
+                    style="font-size:48px !important;">check_circle_outline</span>
+                <p class="empty-title">All caught up!</p>
+                <p class="empty-sub">No reminders left for today.</p>
+            </div>
+            {% else %}
+            {% for r in reminders %}
+            <div class="reminder-item" data-status="{{ r.status }}" data-time="{{ r.time }}"
+                data-medicine="{{ r.medicine_name }}" id="reminder-{{ loop.index }}">
+                <div class="reminder-time">{{ r.time }}</div>
+                <div style="flex:1">
+                    <div class="reminder-name">{{ r.medicine_name }}</div>
+                    <div class="reminder-dose">{{ r.dosage }}</div>
+                </div>
+
+                {% if r.status == 'pending' %}
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <form method="POST" action="{{ url_for('update_reminder_status', reminder_id=r.id) }}"
+                        style="margin:0">
+                        <input type="hidden" name="status" value="missed">
+                        <button class="action-btn close"><span class="material-icons-round"
+                                style="font-size:18px">close</span></button>
+                    </form>
+                    <form method="POST" action="{{ url_for('update_reminder_status', reminder_id=r.id) }}"
+                        style="margin:0">
+                        <input type="hidden" name="status" value="taken">
+                        <button class="action-btn check"><span class="material-icons-round"
+                                style="font-size:18px">check</span></button>
+                    </form>
+                </div>
+                {% else %}
+                <span class="status-pill {{ r.status }}">{{ r.status }}</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<!-- ─── LIVE AUDIO ALARM ───────────────────────────────────────── -->
+<audio id="alarmAudio" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg"
+    preload="auto"></audio>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const alarmAudio = document.getElementById('alarmAudio');
+        let alarmedTimes = new Set(); // Prevent continuous ringing for the same minute
+
+        // Request notification permission if needed
+        if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+            Notification.requestPermission();
+        }
+
+        // Check time every 10 seconds
+        setInterval(checkReminders, 10000);
+
+        function checkReminders() {
+            const now = new Date();
+            const currentHours = now.getHours().toString().padStart(2, '0');
+            const currentMinutes = now.getMinutes().toString().padStart(2, '0');
+            const currentTime = `${currentHours}:${currentMinutes}`;
+
+            const reminders = document.querySelectorAll('.reminder-item[data-status="pending"]');
+
+            reminders.forEach(item => {
+                const time = item.getAttribute('data-time');
+                const medicineName = item.getAttribute('data-medicine');
+
+                if (time === currentTime && !alarmedTimes.has(time)) {
+                    // Play alarm
+                    alarmAudio.play().catch(e => console.log("Audio play prevented by browser:", e));
+
+                    // Show notification
+                    if ("Notification" in window && Notification.permission === "granted") {
+                        new Notification("Medication Reminder", {
+                            body: `It's time to take your ${medicineName}!`,
+                            icon: "/static/favicon.ico" // Optional: add an icon if you have one
+                        });
+                    }
+
+                    alarmedTimes.add(time);
+
+                    // Visual highlight
+                    item.style.transition = "all 0.5s ease";
+                    item.style.transform = "scale(1.02)";
+                    item.style.boxShadow = "0 0 15px var(--red)";
+                    item.style.border = "1px solid var(--red)";
+
+                    // Reset visual after 30 seconds
+                    setTimeout(() => {
+                        item.style.transform = "scale(1)";
+                        item.style.boxShadow = "none";
+                        item.style.border = "1px solid var(--surface-border)";
+                    }, 30000);
+                }
+            });
+
+            // Clear alarmed times if the minute has passed
+            alarmedTimes.forEach(time => {
+                if (time !== currentTime) {
+                    alarmedTimes.delete(time);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

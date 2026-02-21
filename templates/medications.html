@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block page_title %}
+{% if is_guardian and allowed_patients %}
+<div style="display:flex; align-items:center; gap:12px;">
+    <span>Medications for</span>
+    <select class="form-input"
+        style="width:auto; padding:8px 32px 8px 16px; font-size:16px; font-weight:600; background-color:var(--surface); border-color:var(--surface-border); border-radius:var(--radius-sm);"
+        onchange="window.location.href='?patient_id=' + this.value">
+        <!-- Option for the guardian themselves -->
+        <option value="{{ current_user_id }}" {% if current_target_id==current_user_id %}selected{% endif %}>You
+        </option>
+        <!-- Options for patients -->
+        {% for p in allowed_patients %}
+        <option value="{{ p.id }}" {% if current_target_id==p.id %}selected{% endif %}>{{ p.name }}</option>
+        {% endfor %}
+    </select>
+</div>
+{% else %}
+My Medications
+{% endif %}
+{% endblock %}
+{% block page_subtitle %}
+{% if current_target_id != current_user_id %}
+Viewing {{ medications|length }} active prescriptions for this patient
+{% else %}
+{{ medications|length }} active prescriptions taking care of your health
+{% endif %}
+{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('add_medicine') }}" class="btn-primary" style="text-decoration:none">
+    <span class="material-icons-round" style="font-size:20px">add</span>
+    Add Medicine
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="med-grid">
+    {% if not medications %}
+    <div class="empty-state" style="grid-column: 1 / -1; padding:100px 20px;">
+        <span class="material-icons-round empty-icon">medication</span>
+        <p class="empty-title">No medications found</p>
+        <p class="empty-sub">Add your first medicine using the button in the top right.</p>
+    </div>
+    {% else %}
+    {% for med in medications %}
+    <div class="med-card">
+        <div class="med-card-top">
+            <div>
+                <div class="med-name">
+                    {{ med.name }}
+                    {% if med.patient_name and med.patient_name != 'You' %}
+                    <span class="meta-chip"
+                        style="background:var(--primary-light); color:var(--primary); font-size:11px; margin-left:6px; padding:2px 8px;">{{
+                        med.patient_name }}</span>
+                    {% endif %}
+                </div>
+                <div class="med-dosage">{{ med.dosage }}</div>
+            </div>
+            <div class="med-icon-wrap">
+                <span class="material-icons-round" style="font-size:26px">vaccines</span>
+            </div>
+        </div>
+
+        <div class="med-meta">
+            {% if med.frequency %}
+            <span class="meta-chip">{{ med.frequency }}</span>
+            {% endif %}
+            {% for schedule_time in med.schedule[:3] %}
+            <span class="meta-chip">
+                <span class="material-icons-round" style="font-size:14px; margin-right:4px;">schedule</span>
+                {{ schedule_time }}
+            </span>
+            {% endfor %}
+        </div>
+
+        {% if med.instructions %}
+        <p
+            style="font-size:14px;color:var(--text-muted); padding:12px; background:var(--bg); border-radius:12px; margin:0;">
+            <span
+                style="font-weight:600; color:var(--text); display:block; margin-bottom:4px; font-size:12px; text-transform:uppercase;">Instructions</span>
+            {{ med.instructions }}
+        </p>
+        {% endif %}
+
+        <div class="med-actions">
+            <button type="button" class="action-btn-edit" title="Edit medicine" onclick="openEditModal('{{ med.id }}')"
+                style="background:transparent; border:none; color:var(--text-subtle); cursor:pointer; padding:8px; border-radius:var(--radius-sm); transition:all var(--transition);">
+                <span class="material-icons-round" style="font-size:20px">edit</span>
+            </button>
+            <form method="POST" action="{{ url_for('delete_medication', medication_id=med.id) }}" style="margin:0;"
+                onsubmit="return confirm('Are you sure you want to delete this medication?');">
+                <button type="submit" class="action-btn-delete" title="Delete medicine"
+                    style="background:transparent; border:none; color:var(--red); cursor:pointer; padding:8px; border-radius:var(--radius-sm); transition:all var(--transition);">
+                    <span class="material-icons-round" style="font-size:20px">delete_outline</span>
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+</div>
+
+<!-- ─── EDIT MODAL ─────────────────────────────────────────────── -->
+<div id="editMedModal" class="modal-overlay"
+    style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,23,42,0.4); z-index:100; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div class="card" style="width:100%; max-width:500px; margin:20px; box-shadow:var(--shadow-lg);">
+        <div class="card-header"
+            style="justify-content:space-between; align-items:center; border-bottom:1px solid var(--surface-border); padding-bottom:16px; margin-bottom:20px;">
+            <h2 class="card-title">Edit Medication</h2>
+            <button type="button" onclick="closeEditModal()"
+                style="background:transparent; border:none; color:var(--text-muted); cursor:pointer;">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+
+        <form id="editMedForm" onsubmit="handleEditSubmit(event)">
+            <input type="hidden" id="editMedId">
+
+            <div class="field-group">
+                <label class="field-label">Medicine Name</label>
+                <input type="text" id="editName" class="field-input" required>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                <div class="field-group">
+                    <label class="field-label">Dosage</label>
+                    <input type="text" id="editDosage" class="field-input" required>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Frequency</label>
+                    <select id="editFrequency" class="field-input" required>
+                        <option value="once a day">Once a day</option>
+                        <option value="twice a day">Twice a day</option>
+                        <option value="custom">Custom times</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label class="field-label">General Instructions</label>
+                <textarea id="editInstruction" class="field-input" rows="2"
+                    placeholder="e.g. Take with food"></textarea>
+            </div>
+
+            <label class="field-label">Scheduled Times</label>
+            <div style="display:flex; gap:12px; margin-bottom:20px;">
+                <input type="time" id="editTime1" class="field-input">
+                <input type="time" id="editTime2" class="field-input">
+                <input type="time" id="editTime3" class="field-input">
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                <div class="field-group">
+                    <label class="field-label">Start Date</label>
+                    <input type="date" id="editStartDate" class="field-input" required>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">End Date</label>
+                    <input type="date" id="editEndDate" class="field-input">
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+                <button type="button" class="btn-ghost" onclick="closeEditModal()">Cancel</button>
+                <button type="submit" class="btn-primary" id="editSaveBtn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .action-btn-edit:hover {
+        background: var(--primary-light) !important;
+        color: var(--primary) !important;
+    }
+
+    .action-btn-delete:hover {
+        background: var(--red-light) !important;
+        color: var(--red) !important;
+    }
+</style>
+
+<script>
+    async function openEditModal(medId) {
+        try {
+            const res = await fetch(`/medicineDetail/${medId}`);
+            const data = await res.json();
+
+            if (res.ok) {
+                document.getElementById('editMedId').value = medId;
+                document.getElementById('editName').value = data.name;
+                document.getElementById('editDosage').value = data.dosage;
+                document.getElementById('editFrequency').value = data.frequency;
+                document.getElementById('editInstruction').value = data.instructions || '';
+                document.getElementById('editStartDate').value = data.start_date;
+                document.getElementById('editEndDate').value = data.end_date || '';
+
+                // Populate times from schedule
+                document.getElementById('editTime1').value = data.schedule[0] || '';
+                document.getElementById('editTime2').value = data.schedule[1] || '';
+                document.getElementById('editTime3').value = data.schedule[2] || '';
+
+                document.getElementById('editMedModal').style.display = 'flex';
+            } else {
+                alert("Error loading medication details");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Network error");
+        }
+    }
+
+    function closeEditModal() {
+        document.getElementById('editMedModal').style.display = 'none';
+    }
+
+    async function handleEditSubmit(e) {
+        e.preventDefault();
+        const btn = document.getElementById('editSaveBtn');
+        btn.disabled = true;
+        btn.innerHTML = 'Saving...';
+
+        const medId = document.getElementById('editMedId').value;
+        const updateData = {
+            name: document.getElementById('editName').value,
+            dosage: document.getElementById('editDosage').value,
+            frequency: document.getElementById('editFrequency').value,
+            instruction: document.getElementById('editInstruction').value,
+            times: [
+                document.getElementById('editTime1').value,
+                document.getElementById('editTime2').value,
+                document.getElementById('editTime3').value
+            ].filter(t => t),
+            start_date: document.getElementById('editStartDate').value,
+            end_date: document.getElementById('editEndDate').value
+        };
+
+        try {
+            const res = await fetch(`/medications/${medId}/edit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updateData)
+            });
+
+            if (res.ok) {
+                window.location.reload();
+            } else {
+                alert("Failed to update medication");
+                btn.disabled = false;
+                btn.innerHTML = 'Save Changes';
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Network error");
+            btn.disabled = false;
+            btn.innerHTML = 'Save Changes';
+        }
+    }
+</script>
+{% endblock %}
