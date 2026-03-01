@@ -34,7 +34,13 @@
                 <label class="field-label">Frequency <span style="color:var(--red)">*</span></label>
                 <div class="input-wrap">
                     <span class="material-icons-round input-icon">repeat</span>
-                    <input type="text" name="frequency" class="field-input" placeholder="e.g. Twice daily" required />
+                    <select name="frequency" id="addFrequency" class="field-input" required
+                        onchange="updateAddTimeInputs()">
+                        <option value="once a day">Once a day</option>
+                        <option value="twice a day">Twice a day</option>
+                        <option value="three times a day">Three times a day</option>
+                        <option value="custom">Custom times</option>
+                    </select>
                 </div>
             </div>
 
@@ -50,17 +56,20 @@
             <div class="field-group" style="grid-column: 1 / -1;">
                 <label class="field-label">Scheduled Times <span style="color:var(--red)">*</span></label>
                 <div style="display:flex; gap:12px;">
-                    <div class="input-wrap" style="flex:1;">
+                    <div id="addTimeWrapper1" class="input-wrap" style="flex:1;">
                         <span class="material-icons-round input-icon">alarm</span>
-                        <input type="time" name="time_1" class="field-input" required />
+                        <input type="text" name="time_1" id="addTime1" class="field-input timepicker"
+                            placeholder="Time 1" required autocomplete="off" />
                     </div>
-                    <div class="input-wrap" style="flex:1;">
+                    <div id="addTimeWrapper2" class="input-wrap" style="flex:1; display:none;">
                         <span class="material-icons-round input-icon">alarm</span>
-                        <input type="time" name="time_2" class="field-input" />
+                        <input type="text" name="time_2" id="addTime2" class="field-input timepicker"
+                            placeholder="Time 2" autocomplete="off" />
                     </div>
-                    <div class="input-wrap" style="flex:1;">
+                    <div id="addTimeWrapper3" class="input-wrap" style="flex:1; display:none;">
                         <span class="material-icons-round input-icon">alarm</span>
-                        <input type="time" name="time_3" class="field-input" />
+                        <input type="text" name="time_3" id="addTime3" class="field-input timepicker"
+                            placeholder="Time 3" autocomplete="off" />
                     </div>
                 </div>
                 <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">Reminders will be automatically
@@ -94,4 +103,32 @@
         </div>
     </form>
 </div>
+
+<script>
+    function updateAddTimeInputs() {
+        const freq = document.getElementById('addFrequency').value.toLowerCase();
+        const t2 = document.getElementById('addTimeWrapper2');
+        const t3 = document.getElementById('addTimeWrapper3');
+        const i2 = document.getElementById('addTime2');
+        const i3 = document.getElementById('addTime3');
+
+        if (freq === 'once a day') {
+            t2.style.display = 'none';
+            t3.style.display = 'none';
+            i2.value = '';
+            i3.value = '';
+        } else if (freq === 'twice a day') {
+            t2.style.display = 'block';
+            t3.style.display = 'none';
+            i3.value = '';
+        } else {
+            t2.style.display = 'block';
+            t3.style.display = 'block';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateAddTimeInputs();
+    });
+</script>
 {% endblock %}

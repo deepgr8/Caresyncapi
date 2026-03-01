@@ -130,9 +130,10 @@ Viewing {{ medications|length }} active prescriptions for this patient
                 </div>
                 <div class="field-group">
                     <label class="field-label">Frequency</label>
-                    <select id="editFrequency" class="field-input" required>
+                    <select id="editFrequency" class="field-input" required onchange="updateEditTimeInputs()">
                         <option value="once a day">Once a day</option>
                         <option value="twice a day">Twice a day</option>
+                        <option value="three times a day">Three times a day</option>
                         <option value="custom">Custom times</option>
                     </select>
                 </div>
@@ -146,9 +147,18 @@ Viewing {{ medications|length }} active prescriptions for this patient
 
             <label class="field-label">Scheduled Times</label>
             <div style="display:flex; gap:12px; margin-bottom:20px;">
-                <input type="time" id="editTime1" class="field-input">
-                <input type="time" id="editTime2" class="field-input">
-                <input type="time" id="editTime3" class="field-input">
+                <div id="editTimeWrapper1" style="flex:1;">
+                    <input type="text" id="editTime1" class="field-input timepicker" placeholder="Time 1" required
+                        autocomplete="off">
+                </div>
+                <div id="editTimeWrapper2" style="flex:1; display:none;">
+                    <input type="text" id="editTime2" class="field-input timepicker" placeholder="Time 2"
+                        autocomplete="off">
+                </div>
+                <div id="editTimeWrapper3" style="flex:1; display:none;">
+                    <input type="text" id="editTime3" class="field-input timepicker" placeholder="Time 3"
+                        autocomplete="off">
+                </div>
             </div>
 
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
@@ -193,14 +203,15 @@ Viewing {{ medications|length }} active prescriptions for this patient
                 document.getElementById('editName').value = data.name;
                 document.getElementById('editDosage').value = data.dosage;
                 document.getElementById('editFrequency').value = data.frequency;
+                updateEditTimeInputs();
                 document.getElementById('editInstruction').value = data.instructions || '';
                 document.getElementById('editStartDate').value = data.start_date;
                 document.getElementById('editEndDate').value = data.end_date || '';
 
                 // Populate times from schedule
-                document.getElementById('editTime1').value = data.schedule[0] || '';
-                document.getElementById('editTime2').value = data.schedule[1] || '';
-                document.getElementById('editTime3').value = data.schedule[2] || '';
+                document.getElementById('editTime1').value = data.schedule[0] ? data.schedule[0].time : '';
+                document.getElementById('editTime2').value = data.schedule[1] ? data.schedule[1].time : '';
+                document.getElementById('editTime3').value = data.schedule[2] ? data.schedule[2].time : '';
 
                 document.getElementById('editMedModal').style.display = 'flex';
             } else {
@@ -256,6 +267,27 @@ Viewing {{ medications|length }} active prescriptions for this patient
             alert("Network error");
             btn.disabled = false;
             btn.innerHTML = 'Save Changes';
+        }
+    }
+    function updateEditTimeInputs() {
+        const freq = document.getElementById('editFrequency').value.toLowerCase();
+        const t2 = document.getElementById('editTimeWrapper2');
+        const t3 = document.getElementById('editTimeWrapper3');
+        const i2 = document.getElementById('editTime2');
+        const i3 = document.getElementById('editTime3');
+
+        if (freq === 'once a day') {
+            t2.style.display = 'none';
+            t3.style.display = 'none';
+            i2.value = '';
+            i3.value = '';
+        } else if (freq === 'twice a day') {
+            t2.style.display = 'block';
+            t3.style.display = 'none';
+            i3.value = '';
+        } else {
+            t2.style.display = 'block';
+            t3.style.display = 'block';
         }
     }
 </script>

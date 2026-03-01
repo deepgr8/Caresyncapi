@@ -11,8 +11,11 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/material_blue.css">
+    <link href="https://cdn.jsdelivr.net/gh/dmuy/MDTimePicker@v2.0.0/dist/mdtimepicker.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/dmuy/MDTimePicker@v2.0.0/dist/mdtimepicker.js"></script>
 </head>
 
 <body>
@@ -135,12 +138,13 @@
             document.getElementById('sidebarOverlay').style.display = 'block';
         });
 
-        // Initialize flatpickr on all time inputs
-        flatpickr("input[type=time]", {
-            enableTime: true,
-            noCalendar: true,
-            dateFormat: "H:i",
-            time_24hr: false
+        $(document).ready(function () {
+            $('.timepicker').mdtimepicker({
+                format: 'hh:mm tt',
+                theme: 'blue',
+                readOnly: false,
+                hourPadding: true
+            });
         });
     </script>
 </body>
