@@ -1,9 +1,18 @@
 import os
+import sys
 import json
+import threading
+import tempfile
+import uuid
 from datetime import datetime
-from flask import Flask, request, jsonify, make_response
+from functools import wraps
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, set_access_cookies, unset_jwt_cookies
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+
+# Ensure local `ais.py` is imported instead of any similarly named installed package.
+sys.path.insert(0, os.path.dirname(__file__))
+from ais import extract_and_format_medicine_data
 from dotenv import load_dotenv
 
 import firebase_admin
@@ -11,7 +20,6 @@ from firebase_admin import credentials, firestore
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-from ais import extract_and_format_medicine_data
 
 # Load environment variables
 load_dotenv()
@@ -1020,4 +1028,4 @@ def missing_token_callback(error):
 
 if __name__ == '__main__':
     # Development only
-    app.run(debug=True, port=3001)
+    app.run(debug=True,port=3001)
